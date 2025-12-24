@@ -213,4 +213,20 @@ footer {
 .nav-links a.active {
   color: #0a66c2;
   font-weight: 600;
+}/* Dark mode styles */
+body.dark {
+  background: #121212;
+  color: #f1f1f1;
+}
+
+body.dark header,
+body.dark footer,
+body.dark .project-card,
+body.dark .skills-grid span {
+  background: #1e1e1e;
+  color: #f1f1f1;
+}
+
+body.dark a {
+  color: #4ea1ff;
 }
