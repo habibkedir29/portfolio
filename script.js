@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Mobile menu toggle =====
   const menuToggle = document.querySelector(".menu-toggle");
   const navLinks = document.querySelector(".nav-links");
+  const navItems = document.querySelectorAll(".nav-links a");
+  const sections = document.querySelectorAll("section");
 
   if (menuToggle) {
     menuToggle.addEventListener("click", () => {
@@ -11,60 +13,42 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===== Smooth scroll =====
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  navItems.forEach(anchor => {
     anchor.addEventListener("click", function (e) {
       e.preventDefault();
       document.querySelector(this.getAttribute("href"))
         .scrollIntoView({ behavior: "smooth" });
-      navLinks.classList.remove("active"); // Close menu on link click
+      navLinks.classList.remove("active");
     });
   });
 
-  // ===== Contact form =====
-const form = document.getElementById("contact-form");
-const formSuccess = document.getElementById("form-success");
+  // ===== Contact form (Formspree-safe) =====
+  const form = document.getElementById("contact-form");
+  const formSuccess = document.getElementById("form-success");
 
-if (form) {
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    form.submit();
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      const submitBtn = this.querySelector("button[type='submit']");
+      const name = this.querySelector("#name");
+      const email = this.querySelector("#email");
+      const message = this.querySelector("#message");
 
+      // ❌ Invalid → STOP submission
+      if (!name.value || !email.value || !message.value) {
+        e.preventDefault();
+        formSuccess.textContent = "⚠️ Please fill in all fields!";
+        formSuccess.classList.add("show");
+        setTimeout(() => formSuccess.classList.remove("show"), 3000);
+        return;
+      }
 
-    const submitBtn = this.querySelector("button[type='submit']");
+      // ✅ Valid → let Formspree submit normally
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Sending...";
+    });
+  }
 
-    // Check if all fields are filled
-    const name = this.querySelector("#name");
-    const email = this.querySelector("#email");
-    const message = this.querySelector("#message");
-
-    if (!name.value || !email.value || !message.value) {
-      formSuccess.textContent = "⚠️ Please fill in all fields!";
-      formSuccess.classList.add("show");
-      setTimeout(() => formSuccess.classList.remove("show"), 3000);
-      return; // stop submission
-    }
-
-    // Disable button while sending
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Sending...";
-
-    // Show success message with fade-in
-    formSuccess.textContent = "✅ Message sent successfully!";
-    formSuccess.classList.add("show");
-
-    // Clear form fields
-    this.reset();
-
-    // Re-enable button after 2 seconds
-    setTimeout(() => {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Send Message";
-      formSuccess.classList.remove("show");
-    }, 2000);
-  });
-}
-
-  // ===== 🌙 Dark mode toggle with persistence =====
+  // ===== Dark mode toggle =====
   const themeBtn = document.getElementById("theme-toggle");
   const currentTheme = localStorage.getItem("theme");
 
@@ -76,59 +60,39 @@ if (form) {
   if (themeBtn) {
     themeBtn.addEventListener("click", () => {
       document.body.classList.toggle("dark");
-      if (document.body.classList.contains("dark")) {
-        localStorage.setItem("theme", "dark");
-        themeBtn.textContent = "☀️";
-      } else {
-        localStorage.setItem("theme", "light");
-        themeBtn.textContent = "🌙";
-      }
+      const isDark = document.body.classList.contains("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      themeBtn.textContent = isDark ? "☀️" : "🌙";
     });
   }
 
-  // ===== Scroll fade-in animation (works in both modes & multiple times) =====
+  // ===== Scroll fade-in animation =====
   const faders = document.querySelectorAll(".fade-in");
 
-  const appearOnScroll = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("show");
-        } else {
-          entry.target.classList.remove("show"); // animate again when out of view
-        }
-      });
-    },
-    { threshold: 0.2 }
-  );
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      entry.target.classList.toggle("show", entry.isIntersecting);
+    });
+  }, { threshold: 0.2 });
 
-  faders.forEach(fade => {
-    appearOnScroll.observe(fade);
+  faders.forEach(el => observer.observe(el));
+
+  // ===== Active nav link on scroll =====
+  window.addEventListener("scroll", () => {
+    let current = "";
+
+    sections.forEach(section => {
+      if (scrollY >= section.offsetTop - 100) {
+        current = section.id;
+      }
+    });
+
+    navItems.forEach(link => {
+      link.classList.toggle(
+        "active",
+        link.getAttribute("href") === `#${current}`
+      );
+    });
   });
 
-});
-// ===== Active nav link on scroll =====
-const sections = document.querySelectorAll("section");
-const navItems = document.querySelectorAll(".nav-links a");
-
-window.addEventListener("scroll", () => {
-  let current = "";
-
-  sections.forEach(section => {
-    const sectionTop = section.offsetTop - 80;
-    if (scrollY >= sectionTop) {
-      current = section.getAttribute("id");
-    }
-  });
-
-  navItems.forEach(link => {
-    link.classList.remove("active");
-  
-    if (link.getAttribute("href") === `#${current}`) {
-      link.classList.add("active");
-    }
-  });
-});
-window.addEventListener("scroll", () => {
-  navLinks.classList.remove("active");
 });
